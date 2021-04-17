@@ -27,41 +27,39 @@ pip install fastapi-csrf-protect
 ### With Context and Headers
 
 ```python
+
 from fastapi import FastAPI, Request, Depends
 from fastapi.responses import JSONResponse
 from fastapi.templating import Jinja2Templates
-from fastapi_csrf_protect import CsrfProtect
-from fastapi_csrf_protect.exceptions import CsrfProtectError
+
+from fastapi_csrf import CsrfProtect, get_settings
+from fastapi_csrf.utils import encode_token
+from fastapi_csrf.exceptions import CsrfProtectError
 from pydantic import BaseModel
 
 app = FastAPI()
 templates = Jinja2Templates(directory='templates')
+secret_key = "asecret"
 
-class CsrfSettings(BaseModel):
-  secret_key:str = 'asecrettoeverybody'
-
-@CsrfProtect.load_config
-def get_csrf_config():
-  return CsrfSettings()
+def get_csrf(r: Request) -> CsrfProtect:
+  return CsrfProtect(secret_key, get_settings())
 
 @app.get('/form')
-def form(request: Request, csrf_protect:CsrfProtect = Depends()):
+def form(request: Request):
   '''
   Returns form template.
   '''
-  csrf_token = csrf_protect.generate_csrf()
   response = templates.TemplateResponse('form.html', {
-    'request': request, 'csrf_token': csrf_token
+    'request': request, 'csrf_token': encode_token("session_id", secret_key)
   })
   return response
 
 @app.post('/posts', response_class=JSONResponse)
-def create_post(request: Request, csrf_protect:CsrfProtect = Depends()):
+def create_post(request: Request, csrf_protect: CsrfProtect = Depends(get_csrf)):
   '''
   Creates a new Post
   '''
-  csrf_token = csrf_protect.get_csrf_from_headers(request.headers)
-  csrf_protect.validate_csrf(csrf_token)
+  csrf_token = csrf_protect.validate_csrf(request)
   # Do stuff
 
 @app.exception_handler(CsrfProtectError)
