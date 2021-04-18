@@ -12,7 +12,9 @@
 FastAPI extension that provides Csrf Protection Token support
 '''
 
-__version__ = '0.3.0'
+__version__ = '0.3.1'
 
-from .core import CsrfProtect
+from .csrf import CSRF
 from .settings import CSRFSettings, get_settings
+from .exceptions import CSRFError, MissingTokenError, TokenValidationError
+from .utils import encode_token, decode_token
