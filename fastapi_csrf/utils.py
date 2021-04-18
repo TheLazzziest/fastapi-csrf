@@ -6,7 +6,7 @@ from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadData
 
 from .exceptions import TokenValidationError
 
-def encode_token(session_id: Optional[str] = None, secret_key: Optional[str] = None, salt: Optional[str] = None) -> str:
+def encode_token(secret_key: str, salt: Optional[str] = None, session_id: Optional[str] = None) -> str:
     '''
     Generate a CSRF token. The token is cached for a request, so multiple
     calls to this function will generate the same token.
@@ -17,7 +17,7 @@ def encode_token(session_id: Optional[str] = None, secret_key: Optional[str] = N
     )
     return token
 
-def decode_token(token: str, secret_key: Optional[str] = None, salt: Optional[str] = None, max_age: Optional[int] = 0) -> str:
+def decode_token(token: str, secret_key: str, salt: Optional[str] = None, max_age: Optional[int] = 0) -> str:
     '''
     Check if the given data is a valid CSRF token. This compares the given
     signed token to the one stored in the session.
@@ -35,3 +35,4 @@ def decode_token(token: str, secret_key: Optional[str] = None, salt: Optional[st
       raise TokenValidationError('The CSRF token has expired.') from exc
     except BadData as exc:
       raise TokenValidationError('The CSRF token is invalid.') from exc
+    return token
